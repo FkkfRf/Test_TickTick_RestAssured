@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class LoginBody {
 
-    private String password , username;
+    private String password , username, token;
 }

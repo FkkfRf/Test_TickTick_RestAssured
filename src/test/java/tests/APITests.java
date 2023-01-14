@@ -4,11 +4,16 @@ import base.BaseTestAPI;
 import models.lombok.TaskBody;
 import models.lombok.LoginBody;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.Cookie;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static api.AuthorizationApi.ALLURE_TESTOPS_SESSION;
+import static com.codeborne.selenide.Selenide.open;
+import static com.codeborne.selenide.Selenide.sleep;
+import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
+import static io.restassured.RestAssured.authentication;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static spec.RequestSpecs.loginRequestSpec;
@@ -23,6 +28,7 @@ public class APITests extends BaseTestAPI {
         LoginBody loginBody = new LoginBody();
         loginBody.setPassword(loginPassword);
         loginBody.setUsername(loginUsername);
+        loginBody.setToken("");
 
         given()
                 .spec(loginRequestSpec)
@@ -32,13 +38,14 @@ public class APITests extends BaseTestAPI {
                 .then()
                 .spec(loginSuccessResponseSpec);
 
-    }
+}
 
     @Test
     void loginUnSuccessTest() {
         LoginBody loginBody = new LoginBody();
         loginBody.setPassword(loginPassword + " ");
         loginBody.setUsername(loginUsername + " ");
+        loginBody.setToken("");
 
         given()
                 .spec(loginRequestSpec)
@@ -52,24 +59,20 @@ public class APITests extends BaseTestAPI {
     @Test
     void createTaskTest(){
 
-        /*
-        1. https://api.ticktick.com/api/v2/batch/task
-        body {"add":[{"items":[],"reminders":[],"exDate":[],"dueDate":null,"priority":0,"isAllDay":true,"progress":0,"assignee":null,"sortOrder":-4398046511104,"startDate":"2023-01-13T21:00:00.000+0000","isFloating":false,"status":0,"projectId":"inbox120897079","kind":null,"createdTime":"2023-01-14T16:24:38.000+0000","modifiedTime":"2023-01-14T16:24:38.000+0000","title":"Тестовая задача ","tags":[],"timeZone":"Europe/Moscow","content":"","id":"63c2d746a1aa525fe15a0e3f"}],"update":[],"delete":[],"addAttachments":[],"updateAttachments":[],"deleteAttachments":[]}
-        2."id": "63c2d746a1aa525fe15a0e3f"
-        {"id2etag":{"63c2d746a1aa525fe15a0e3f":"9crkdwdp"},"id2error":{}}
-         */
-
         LoginBody loginBody = new LoginBody();
         loginBody.setPassword(loginPassword);
         loginBody.setUsername(loginUsername);
+        loginBody.setToken("154BB8FE91446783544A0917730F3292E1C1CDC1FAEF86E0FF912404F0E9B177CA7DB1D798A7404169406594F7F54594B8CBE409528571FB6238D1D068EB4B228477188A5A4DE60C676CDE0406994D9A79D656DC584E7550B0EE545D9EED946F82BEE463B1431075BC4DD36207DCA5A879D656DC584E7550CEAD8B17EA1E23D477A05874A7177D5AD50B2A812E71759346C1E65D8CBB61E321FC16360D2CDBDA;");
 
-        given()
-                .spec(loginRequestSpec)
+        String AUTH_AWSALBCORS = "AWSALBCORS";
+        String getAuthorizationCookie = String.valueOf(given()
                 .body(loginBody)
-                .when()
-                .post()
-                .then()
-                .spec(loginSuccessResponseSpec);
+                .get("https://ticktick.com/signin")
+                .then().extract().response()
+                  .getCookie(AUTH_AWSALBCORS));
+
+        String AUTH_COOKIE = "AWSALB=" + getAuthorizationCookie + "; AWSALBCORS=" + getAuthorizationCookie + "; t=154BB8FE91446783544A0917730F3292E1C1CDC1FAEF86E0FF912404F0E9B177CA7DB1D798A7404169406594F7F54594B8CBE409528571FB6238D1D068EB4B228477188A5A4DE60C676CDE0406994D9A79D656DC584E7550B0EE545D9EED946F82BEE463B1431075BC4DD36207DCA5A879D656DC584E7550CEAD8B17EA1E23D477A05874A7177D5AD50B2A812E71759346C1E65D8CBB61E321FC16360D2CDBDA;";;
+        System.out.println(AUTH_COOKIE);
 
 
         String titleName;
@@ -85,16 +88,14 @@ public class APITests extends BaseTestAPI {
         taskBody.setAdd(addBodyList);
 
 
-        given()
+    given()
                 .log().all()
-                .cookie("_ga=GA1.2.129246384.1673651176")
+                .cookie("AWSALB" , getAuthorizationCookie)
                 .body(taskBody)
                 .contentType(JSON)
-                //.queryParam("projectId", "1771")
-                //testcase/13917/scenario
                 .post("https://api.ticktick.com/api/v2/batch/task")
                 .then()
-                .log().body()
+                .log().all()
                 .statusCode(200);
     }
 }

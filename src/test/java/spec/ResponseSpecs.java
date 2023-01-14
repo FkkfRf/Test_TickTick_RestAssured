@@ -9,7 +9,7 @@ import static org.hamcrest.Matchers.notNullValue;
 public class ResponseSpecs {
 
     public static ResponseSpecification loginSuccessResponseSpec = new ResponseSpecBuilder()
-            .log(STATUS)
+            .log(ALL)
             .expectStatusCode(200)
             .build();
 
