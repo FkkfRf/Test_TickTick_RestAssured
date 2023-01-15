@@ -90,7 +90,7 @@ public class APITests extends BaseTestAPI {
 
     given()
                 .log().all()
-                .cookie("AWSALB" , getAuthorizationCookie)
+                .cookie(AUTH_COOKIE)
                 .body(taskBody)
                 .contentType(JSON)
                 .post("https://api.ticktick.com/api/v2/batch/task")
